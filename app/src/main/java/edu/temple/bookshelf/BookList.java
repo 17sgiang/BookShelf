@@ -2,7 +2,7 @@ package edu.temple.bookshelf;
 
 import java.util.ArrayList;
 
-public class BookList {
+public class BookList extends ArrayList{
 
     // ArrayList of Book objects
     // Is there anything special about this class?
