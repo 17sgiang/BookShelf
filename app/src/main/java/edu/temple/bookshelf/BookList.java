@@ -1,20 +1,27 @@
 package edu.temple.bookshelf;
 
-public class BookList {
-    public void add(Book book){
+import java.util.ArrayList;
 
+public class BookList {
+
+    // ArrayList of Book objects
+    // Is there anything special about this class?
+    ArrayList<Book> bookArrayList = new ArrayList<Book>();
+
+    public void add(Book book){
+        bookArrayList.add(book);
     }
 
     public void remove(Book book){
-
+        bookArrayList.remove(book);
     }
 
     public Book get(int position){
-
-        return null;
+        return bookArrayList.get(position);
     }
 
     public int size(){
-        return -1;
+        return bookArrayList.size();
     }
+
 }
