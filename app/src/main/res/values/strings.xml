@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">BookShelf</string>
+    <string name="title_default">Title Here</string>
+    <string name="author_default">Author Here</string>
 
     <string-array name="title_array">
         <item>Kuchibiru</item>
@@ -10,7 +12,7 @@
         <item>Green Eggs and Ham</item>
         <item>Sword Art Online</item>
         <item>Stellaluna</item>
-        <item>Horngren's Cost Accounting - A Managerial Emphasis</item>
+        <item>Horngren\'s Cost Accounting - A Managerial Emphasis</item>
         <item>Everything I Know About Women I Learned from my Tractor</item>
         <item>Ninja: Get Good: My Ultimate Guide to Gaming</item>
         <item>The Will to Keep Winning</item>
@@ -31,7 +33,7 @@
         <item>Janell Cannon</item>
         <item>Srikant M. Datar</item>
         <item>Roger Welsh</item>
-        <item>Tyler "Ninja" Blevins</item>
+        <item>Tyler \"Ninja\" Blevins</item>
         <item>Daigo Umehara</item>
         <item>Jason R. Rich</item>
         <item>Hiroshi Izawa</item>
@@ -39,7 +41,5 @@
         <item>Steve the Noob</item>
 
     </string-array>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

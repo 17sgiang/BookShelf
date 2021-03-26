@@ -7,11 +7,14 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
+
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -25,7 +28,7 @@ public class BookListFragment extends Fragment {
     int id;
     private BookList bookList;
     // Since the listView is the parent layout without an id, perhaps it's just the context
-    ListView listView;
+
     BookListFragmentInterface parentActivity;
 
     public BookListFragment() {
@@ -74,25 +77,34 @@ public class BookListFragment extends Fragment {
             id = myBundle.getInt("id");
             bookList = myBundle.getParcelable(ARG_BOOKLIST);
         } else {
+            // How to generate non-duplicate ID
             // Parcel in?
             bookList = new BookList();
 
         }
-
-//        if (getArguments() != null) {
-//            mParam1 = getArguments().getString(ARG_PARAM1);
-//            mParam2 = getArguments().getString(ARG_PARAM2);
-//        }
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container, false);
+        ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container,false);
 
-        // TODO Need a BookListAdapter from recording on March 16 0:41:00
+//        Log.d("myTag", "Entered onCreateView");
+//        Log.d("myTag", bookList.toString());
+//        Log.d("myTag", container.toString());
+
+        // TODO find out why bookList becomes null here
+        BookListAdapter bookListAdapter = new BookListAdapter(getActivity(), android.R.layout.simple_list_item_1, bookList);
+        listView.setAdapter(bookListAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id){
+                // Call method in parentActivity that makes a BookDetailsFragment
+                parentActivity.fragmentClick(getFragmentId());
+            }
+        });
 
         // When provided with the BookList object, displays title and author for each book.
         // Title and author each have their own TextView
@@ -100,14 +112,6 @@ public class BookListFragment extends Fragment {
 
         // Get a reference to any Views in the layout
 //        listView = layout.findViewById();
-
-        TextView textView = new TextView(getActivity());
-        textView.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                parentActivity.fragmentClick(getFragmentId());
-            }
-        });
 
         return listView;
     }
