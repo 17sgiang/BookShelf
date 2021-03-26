@@ -15,6 +15,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         // Accessing resources
         Resources res = getResources();
         String[] titleArray = res.getStringArray(R.array.title_array);
@@ -40,14 +42,31 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 //        myBundle.putParcelableArrayList(null, bookList);
 //        myFragment.setArguments(myBundle);
 
-        // Attaches the fragment to the Activity
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.container, myFragment)
-                .commit();
+        // Determine if the fragment was already created.
+
+        if(getSupportFragmentManager().findFragmentById(R.id.container) instanceof BookListFragment){
+
+        } else {
+            // Attaches the fragment to the Activity
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.container, myFragment)
+                    .commit();
+        }
+
+        // using .add instead of .replace makes the fragments persist upon rotation, and aren't cleaned up.
+        // inefficient, creates a fragment that was already there.
+        // Find a solution that doesn't require recreation of the fragment
 
 
     }
+
+
+    // MainActivity should check the layout through presence of containers
+    // Depending on check, different actions should be taken when items are clicked
+    // If mobile layout, should replace with BookDetails Fragment to the BackStack
+
+    // TODO check implementation March 16 1:10:00 recording
 
     // Implements fragmentClick() from BookListFragment
     public void fragmentClick(int id){
