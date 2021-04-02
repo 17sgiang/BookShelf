@@ -10,47 +10,57 @@ import android.util.Log;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
 
+    FragmentManager fm;
+
+    boolean twoPane;
+    BookDetailsFragment bookDetailsFragment;
+    Book selectedBook;
+    private final String KEY_SELECTED_BOOK = "selectedBook";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Accessing resources
-        Resources res = getResources();
-        String[] titleArray = res.getStringArray(R.array.title_array);
-        String[] authorArray = res.getStringArray(R.array.author_array);
-
-//        Log.d("myTag", "Printing Title Array");
-//        Log.d("myTag", titleArray[0]);
-//        Log.d("myTag", authorArray[0]);
-//
-//        Log.d("myTag", titleArray[1]);
-//        Log.d("myTag", authorArray[1]);
-
-        // Create instance of BookList class and populate it with ten books
-        BookList bookList = new BookList();
-
-        // Change later so it only goes so far as the shorter array
-        for(int i = 0; i < titleArray.length; i++){
-            bookList.add(new Book(titleArray[i], authorArray[i]));
+        // Fetch selected book if there was one
+        if(savedInstanceState != null){
+            selectedBook = savedInstanceState.getParcelable(KEY_SELECTED_BOOK);
         }
-//        Log.d("myTag", "Printing bookList");
-//        Log.d("myTag", bookList.toString());
 
-        // Keeps a reference to the fragment
-        // Using newInstance allows us to pass information to the fragment on creation
-        Fragment myFragment = BookListFragment.newInstance(1234, bookList);
+        twoPane = findViewById(R.id.container_2) != null;
+        fm = getSupportFragmentManager();
 
-        // Determine if the fragment was already created.
+        Fragment fragment1 = fm.findFragmentById(R.id.container_1);
+        // Fragment fragment1 = fm.findFragmentByTag();     // Circumvents timing issues
 
-//        if(getSupportFragmentManager().findFragmentById(R.id.container_1) instanceof BookListFragment){}
+        if(fragment1 instanceof BookDetailsFragment){
+            fm.popBackStack();
+        } else if (!(fragment1 instanceof BookListFragment)){
+            // getTestBooks() should just be a relocation of the code I used to access resources
+            fm.beginTransaction()
+                    .add(R.id.container_1, BookListFragment.newInstance(getTestBooks()))
+                    .commit();
+        }
 
-        // Attaches the fragment to the Activity
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.container_1, myFragment)
-                .commit();
+        // If two containers available, load single instance of BookDetailsFragment to display all selected books
+        bookDetailsFragment = (selectedBook == null) ? new BookDetailsFragment() : BookDetailsFragment.newInstance(selectedBook);
+
+        if(twoPane){
+            fm.beginTransaction()
+                    .replace(R.id.container_2, bookDetailsFragment)
+                    .commit();
+        } else if (selectedBook != null){
+            // If a book was selected and we have a single container
+            // Replace BookListFragment with BookDetailsFragment, making the transaction reversible
+            fm.beginTransaction()
+                    .replace(R.id.container_1, bookDetailsFragment)
+                    .addToBackStack(null)
+                    .commit();
+
+        }
+
+
+
 
         // using .add instead of .replace makes the fragments persist upon rotation, and aren't cleaned up.
         // inefficient, creates a fragment that was already there.
@@ -59,6 +69,23 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     }
 
+    private BookList getTestBooks(){
+
+        // Accessing resources
+        Resources res = getResources();
+        String[] titleArray = res.getStringArray(R.array.title_array);
+        String[] authorArray = res.getStringArray(R.array.author_array);
+
+        // Create instance of BookList class and populate it with ten books
+        BookList bookList = new BookList();
+
+        // Change later so it only goes so far as the shorter array
+        for(int i = 0; i < titleArray.length; i++){
+            bookList.add(new Book(titleArray[i], authorArray[i]));
+        }
+
+        return bookList;
+    };
 
     // MainActivity should check the layout through presence of containers
     // Depending on check, different actions should be taken when items are clicked
@@ -66,9 +93,40 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     // TODO check implementation March 16 1:10:00 recording
 
-    // Implements fragmentClick() from BookListFragment
-    public void fragmentClick(int id){
+    public void bookSelected(int index){
+        // Store the selected book to use later if activity restarts
+        selectedBook = getTestBooks().get(index);
 
+        if(twoPane){
+            // Display selected book using previously attached fragment
+            bookDetailsFragment.displayBook(selectedBook);
+        } else {
+            // Display book using new fragment
+            fm.beginTransaction()
+                    .replace(R.id.container_1, BookDetailsFragment.newInstance(selectedBook))
+                    .addToBackStack(null)
+                    .commit();
+        }
+    }
+
+//    // Implements fragmentClick() from BookListFragment
+//    public void fragmentClick(int id){
+//
+//
+//    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        // Saves selected book
+        outState.putParcelable(KEY_SELECTED_BOOK, selectedBook);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // If the user hits the back button, clear the selected book
+        selectedBook = null;
+        super.onBackPressed();
 
     }
 }

@@ -2,9 +2,11 @@ package edu.temple.bookshelf;
 
 import android.content.Context;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -12,27 +14,26 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 
-public class BookListAdapter extends ArrayAdapter {
+public class BookListAdapter extends BaseAdapter {
 
     Context context;
-    BookList bookList;
+    BookList books;
 
-    // TODO Find out why getCount() is returning 0
-    public BookListAdapter(@NonNull Context context, int resource, @NonNull BookList bookList) {
-        super(context, resource, bookList);
+    public BookListAdapter(Context context, BookList books) {
+
         this.context = context;
-        this.bookList = bookList;
-        Log.d("myTag", "getCount(): " + getCount() + " ");
+        this.books = books;
+
     }
 
     @Override
     public int getCount() {
-        return bookList.size();
+        return books.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return bookList.get(position);
+        return books.get(position);
     }
 
     @Override
@@ -43,36 +44,23 @@ public class BookListAdapter extends ArrayAdapter {
     // Return a View that displays the book title and author for the position given
     @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        Log.d("myTag", "Entered BookListAdapter.getView");
-        // Figure out what parent does here, if I can use it to get rid of the linearLayout or not
-        LinearLayout linearLayout;
+    public View getView(int position, View convertView, ViewGroup parent) {
 
-        TextView titleView;
-        TextView authorView;
+        TextView titleTextView, authorTextView;
 
-        if(convertView == null){
-
-            linearLayout = new LinearLayout(context);
-            titleView = new TextView(context);
-            authorView = new TextView(context);
-            titleView.setTextSize(22);
-            authorView.setTextSize(20);
-            linearLayout.addView(titleView);
-            linearLayout.addView(authorView);
-//            textView.setPadding(12,20,0,20);
-
-        } else {
-            linearLayout = (LinearLayout) convertView;
-            titleView = (TextView)linearLayout.getChildAt(0);
-            authorView = (TextView) linearLayout.getChildAt(1);
+        if(!(convertView instanceof LinearLayout)){
+            // Inflate predefined layout file that includes 2 text views
+            // Need a layout file for this
+            // This is an easier alternative to creating the layout in code like I did last time
+            convertView = LayoutInflater.from(context).inflate(R.layout.book_list_adapter_layout, parent, false);
         }
 
-        Book myBook = bookList.get(position);
-        Log.d("myTag", myBook.getTitle());
-        titleView.setText(myBook.getTitle());
-        authorView.setText(myBook.getAuthor());
+        titleTextView = convertView.findViewById(R.id.titleTextView);
+        authorTextView = convertView.findViewById(R.id.authorTextView);
 
-        return linearLayout;
+        titleTextView.setText(((Book) getItem(position)).getTitle());
+        authorTextView.setText(((Book) getItem(position)).getAuthor());
+
+        return convertView;
     }
 }

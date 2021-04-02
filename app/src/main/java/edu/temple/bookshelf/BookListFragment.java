@@ -22,13 +22,14 @@ import java.util.ArrayList;
  * create an instance of this fragment.
  */
 public class BookListFragment extends Fragment {
-    private static final String ARG_ID = "fragId";
-    private static final String ARG_BOOKLIST = "bookList";
 
-    int id;
-    private BookList bookList;
+    private static final String BOOK_LIST_KEY = "bookList";
+    private BookList books;
+
+
     // Since the listView is the parent layout without an id, perhaps it's just the context
 
+//     BookSelectedInterface parentActivity;
     BookListFragmentInterface parentActivity;
 
     public BookListFragment() {
@@ -36,28 +37,28 @@ public class BookListFragment extends Fragment {
     }
 
     // Factory method (newInstance(BookList bookList)) that creates a fragment using provided books to set up initial state.
-    public static BookListFragment newInstance(int id, BookList bookList) {
+    public static BookListFragment newInstance(BookList books) {
         BookListFragment fragment = new BookListFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_ID, id);
 
-        // This implementation might not work
-        args.putParcelable(ARG_BOOKLIST, (Parcelable) bookList);
+        // BookList implements Parcelable
+        args.putParcelable(BOOK_LIST_KEY, books);
         fragment.setArguments(args);
         return fragment;
     }
 
 
     @Override
-    public void onAttach(@NonNull Context context){
+    public void onAttach(Context context){
         super.onAttach(context);
 
+        // Fragment needs to communicate with parent activity
+        // Verify that activity implemented defined Interface
         if(context instanceof BookListFragmentInterface) {
             parentActivity = (BookListFragmentInterface) context;
         } else {
             throw new RuntimeException("Please implement the BookListFragmentInterface");
         }
-
     }
 
     // Prevent memory leaks
@@ -74,13 +75,7 @@ public class BookListFragment extends Fragment {
 
         Bundle myBundle = getArguments();
         if(myBundle != null){
-            id = myBundle.getInt("id");
-            bookList = myBundle.getParcelable(ARG_BOOKLIST);
-        } else {
-            // How to generate non-duplicate ID
-            // Parcel in?
-            bookList = new BookList();
-
+            books = myBundle.getParcelable(BOOK_LIST_KEY);
         }
     }
 
@@ -90,19 +85,13 @@ public class BookListFragment extends Fragment {
         // Inflate the layout for this fragment
         ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container,false);
 
-//        Log.d("myTag", "Entered onCreateView");
-//        Log.d("myTag", bookList.toString());
-//        Log.d("myTag", container.toString());
-
-        // TODO find out why bookList becomes null here
-        BookListAdapter bookListAdapter = new BookListAdapter(getActivity(), android.R.layout.simple_list_item_1, bookList);
-        listView.setAdapter(bookListAdapter);
+        listView.setAdapter(new BookListAdapter(getContext(), books));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id){
                 // Call method in parentActivity that makes a BookDetailsFragment
-                parentActivity.fragmentClick(getFragmentId());
+                parentActivity.bookSelected(position);
             }
         });
 
@@ -120,15 +109,11 @@ public class BookListFragment extends Fragment {
 //        bookList = newBookList;
 //    }
 
-    public int getFragmentId(){
-        return this.id;
-    }
-
 
     // Allows for calling methods in ParentActivity
     interface BookListFragmentInterface{
 
-        void fragmentClick(int id);
+        void bookSelected(int index);
 
     }
 

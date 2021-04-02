@@ -16,23 +16,22 @@ import android.widget.TextView;
  * create an instance of this fragment.
  */
 public class BookDetailsFragment extends Fragment {
-//    public static final String ARG_BOOKLIST = "bookList";
-    public static final String ARG_ID = "frag_id";
-    public static final String ARG_BOOK = "book";
 
-//    private BookList bookList;
+    private static final String BOOK_KEY = "book";
     private Book book;
+
+    TextView titleTextView, authorTextView;
 
     public BookDetailsFragment() {
         // Required empty public constructor
     }
 
-    public static BookDetailsFragment newInstance(int id, Book book) {
+    public static BookDetailsFragment newInstance(Book book) {
         BookDetailsFragment fragment = new BookDetailsFragment();
         Bundle args = new Bundle();
 
-        // Set arguments in Bundle
-        args.putParcelable(ARG_BOOK, (Parcelable)book);
+        // Set arguments in bundle
+        args.putParcelable(BOOK_KEY, book);
 
         fragment.setArguments(args);
         return fragment;
@@ -43,19 +42,25 @@ public class BookDetailsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Bundle myBundle = getArguments();
-        if (myBundle != null) {
-            // Get fragment id
-            // Get Book
+        if (getArguments() != null) {
+            book = getArguments().getParcelable(BOOK_KEY);
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.fragment_book_details, container, false);
 
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_book_details, container, false);
+        titleTextView = v.findViewById(R.id.titleTextView);
+        authorTextView = v.findViewById(R.id.authorTextView);
+
+        // Fragment can be created with or without a book to display when attached
+        // so we need to make sure we don't try to display a book if one isn't provided
+        if(book!= null){
+            displayBook(book);
+        }
+        return v;
 
     }
 
@@ -63,12 +68,9 @@ public class BookDetailsFragment extends Fragment {
     // This method should instead just change the displayed book depending on position given
 
     // Current implementation just displays a book given
-    public TextView displayBook(Book book){
-        // This TextView should be already created in the corresponding layout xml file
-        TextView textView = new TextView(getActivity());
-        return null;
+    public void displayBook(Book book){
+        titleTextView.setText(book.getTitle());
+        authorTextView.setText(book.getAuthor());
     }
-
-    // Don't need interface maybe
 
 }

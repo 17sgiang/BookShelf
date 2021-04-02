@@ -2,25 +2,20 @@ package edu.temple.bookshelf;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.List;
 
-public class BookList extends ArrayList implements Parcelable {
+public class BookList implements Parcelable {
 
-    // ArrayList of Book objects
-    // Is there anything special about this class?
-    ArrayList<Book> bookArrayList;
+    private ArrayList<Book> books;
 
-    // Not sure what Parcel in is
     protected BookList(Parcel in) {
-        bookArrayList = new ArrayList<>();
+        books = new ArrayList<>();
     }
 
     // Overloading or whatever the term was for when I don't need to make from Parcel
     public BookList(){
-        bookArrayList = new ArrayList<>();
+        books = new ArrayList<>();
     }
 
     @Override
@@ -44,30 +39,20 @@ public class BookList extends ArrayList implements Parcelable {
         }
     };
 
-//    public void add(Book book){
-//        Log.d("myTag", book.getTitle());
-//        bookArrayList.add(book);
-//    }
-
-    public void remove(Book book){
-        bookArrayList.remove(book);
+    public void add(Book book){
+        books.add(book);
     }
 
     public ArrayList<Book> getBookArrayList(){
-        return bookArrayList;
+        return books;
     }
 
     public Book get(int position){
-        return bookArrayList.get(position);
+        return books.get(position);
     }
 
-    public String getBookString(int position){
-        Book book = get(position);
-        String toPrint = book.getTitle() + " by " + book.getAuthor();
-        return toPrint;
-    }
     public int size(){
-        return bookArrayList.size();
+        return books.size();
     }
 
 }
