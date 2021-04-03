@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     FragmentManager fm;
     BookDetailsFragment bookDetailsFragment;
+    BookListFragment bookListFragment;
 
     boolean twoPane;
     Book selectedBook;
@@ -50,8 +51,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             fm.popBackStack();
         } else if (!(fragment1 instanceof BookListFragment)){
             // If bookList hasn't been initiated then can't call this
+            bookListFragment = BookListFragment.newInstance(bookList);
             fm.beginTransaction()
-                    .add(R.id.container_1, BookListFragment.newInstance(bookList))
+                    .add(R.id.container_1, bookListFragment)
                     .commit();
         }
 
@@ -86,18 +88,17 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             String booksOutput = data.getStringExtra(BOOKS_KEY);
             try{
                 JSONArray books = new JSONArray(booksOutput);
-                BookList newBookList = new BookList();
                 // Populate the bookList
-                // If this solution doesn't work, iterate through current bookList and empty it before adding.
+                bookList.clear();
                 for(int i = 0; i < books.length(); i++){
                     JSONObject current = (JSONObject) books.get(i);
-                    newBookList.add(new Book(Integer.parseInt((String)current.get("id")), (String)current.get("title"), (String)current.get("author"), (String)current.get("cover_url")));
+                    bookList.add(new Book(Integer.parseInt((String)current.get("id")), (String)current.get("title"), (String)current.get("author"), (String)current.get("cover_url")));
                 }
-                bookList = newBookList;
                 Log.d("MyTag", bookList.toString());
-                // This might cause pointer issues
 
                 // Notify the BookListFragment of the data set changing
+                bookListFragment.updateBookList();
+
             } catch (Exception e){
                 // Error handling
                 Log.d("MyTag", e.getMessage());

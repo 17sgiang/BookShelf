@@ -24,7 +24,7 @@ public class BookListFragment extends Fragment {
     private BookList books;
     private Button searchButton;
     private ListView listView;
-
+    private BookListAdapter bookListAdapter;
     // Since the listView is the parent layout without an id, perhaps it's just the context
 
     BookListFragmentInterface parentActivity;
@@ -90,9 +90,10 @@ public class BookListFragment extends Fragment {
             }
         });
 
-        listView = (ListView)((LinearLayout)v).getChildAt(1);
+        bookListAdapter = new BookListAdapter(getContext(), books);
 
-        listView.setAdapter(new BookListAdapter(getContext(), books));
+        listView = (ListView)((LinearLayout)v).getChildAt(1);
+        listView.setAdapter(bookListAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id){
@@ -105,15 +106,19 @@ public class BookListFragment extends Fragment {
         // Title and author each have their own TextView
         // When one of the books is clicked, fragment invokes a method in its parent with index of book
 
-        // Get a reference to any Views in the layout
-//        listView = layout.findViewById();
 
         return v;
     }
 
-//    public void setBookList(BookList newBookList) {
-//        bookList = newBookList;
-//    }
+    public void updateBookList() {
+//        Log.d("MyTag", newBookList.toString());
+//        books.clear();
+//        for(int i = 0; i < newBookList.size(); i++){
+//            books.add(newBookList.get(i));
+//        }
+        // Notify the adapter of updated data set
+        bookListAdapter.notifyDataSetChanged();
+    }
 
 
     // Allows for calling methods in ParentActivity

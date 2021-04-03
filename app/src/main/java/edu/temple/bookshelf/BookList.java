@@ -39,6 +39,9 @@ public class BookList implements Parcelable {
         }
     };
 
+    public void clear() {
+        books.clear();
+    }
     public void add(Book book){
         books.add(book);
     }
