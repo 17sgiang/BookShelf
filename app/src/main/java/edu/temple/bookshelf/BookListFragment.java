@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
@@ -21,8 +22,8 @@ public class BookListFragment extends Fragment {
 
     private static final String BOOK_LIST_KEY = "bookList";
     private BookList books;
-
-    // TODO change BookListFragment to a LinearLayout with a button and a ListView
+    private Button searchButton;
+    private ListView listView;
 
     // Since the listView is the parent layout without an id, perhaps it's just the context
 
@@ -81,7 +82,15 @@ public class BookListFragment extends Fragment {
         // Inflate the layout for this fragment
         View v  =  inflater.inflate(R.layout.fragment_book_list, container,false);
 
-        ListView listView = (ListView)((LinearLayout)v).getChildAt(1);
+        searchButton = (Button)((LinearLayout)v).getChildAt(0);
+
+        searchButton.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                parentActivity.startSearch();
+            }
+        });
+
+        listView = (ListView)((LinearLayout)v).getChildAt(1);
 
         listView.setAdapter(new BookListAdapter(getContext(), books));
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
@@ -112,6 +121,7 @@ public class BookListFragment extends Fragment {
 
         void bookSelected(int index);
 
+        void startSearch();
     }
 
 }

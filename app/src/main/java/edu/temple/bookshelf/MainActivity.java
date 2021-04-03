@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,11 +12,13 @@ import android.util.Log;
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
 
     FragmentManager fm;
+    BookDetailsFragment bookDetailsFragment;
 
     boolean twoPane;
-    BookDetailsFragment bookDetailsFragment;
     Book selectedBook;
+
     private final String KEY_SELECTED_BOOK = "selectedBook";
+    public static final String EXTRA_MESSAGE = "edu.temple.bookshelf.MESSAGE";  // Change to something easier
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     // If mobile layout, should replace with BookDetails Fragment to the BackStack
 
 
+    // One of the BookListFragmentInterface methods
     public void bookSelected(int index){
         // Store the selected book to use later if activity restarts
         selectedBook = getTestBooks().get(index);
@@ -98,11 +102,14 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         }
     }
 
-//    // Implements fragmentClick() from BookListFragment
-//    public void fragmentClick(int id){
-//
-//
-//    }
+    public void startSearch(){
+        // Create Intent
+        Intent intent = new Intent(this, BookSearchActivity.class);
+        // Putting data into the intent
+        // Starting Activity
+        startActivity(intent);
+
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState){
