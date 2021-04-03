@@ -2,32 +2,47 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:theme="@style/Theme.MaterialComponents.Dialog.Alert"
+    android:theme="@style/Theme.MaterialComponents.DayNight.Dialog"
     android:excludeFromRecents="true"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="256dp"
+    android:layout_height="wrap_content"
     tools:context=".BookSearchActivity">
-    <EditText
-        android:layout_height="wrap_content"
-        android:layout_width="150dp"
-        android:id="@+id/searchEditText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:autofillHints="@string/search_hints"
-        android:inputType="text">
 
-    </EditText>
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        android:layout_margin="6dp"
+        android:text="@string/search_text"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </TextView>
+
+    <EditText
+        android:id="@+id/search_box"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dp"
+        android:inputType="text"
+        android:hint="@string/search_hints"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_title" />
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
+        android:id="@+id/cancel_button"
         android:layout_height="wrap_content"
+        android:layout_width="118dp"
+        android:layout_margin="6dp"
+        android:text="@string/cancel_text"
+        app:layout_constraintTop_toBottomOf="@+id/search_box"
+        app:layout_constraintStart_toStartOf="parent"/>
+    <Button
+        android:id="@+id/accept_button"
+        android:layout_width="118dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dp"
         android:text="@string/search_text"
-        app:layout_constraintTop_toBottomOf="@+id/searchEditText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:layout_editor_absoluteX="155dp"
-        tools:layout_editor_absoluteY="69dp" />
+        app:layout_constraintTop_toBottomOf="@+id/search_box"
+        app:layout_constraintStart_toEndOf="@+id/cancel_button"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
