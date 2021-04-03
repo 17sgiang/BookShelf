@@ -6,6 +6,8 @@ import android.os.Parcelable;
 public class Book implements Parcelable {
     private String title;
     private String author;
+    private int id;
+    private String coverURL;    // Book cover image URL
 
     public Book(String title, String author){
         this.title = title;

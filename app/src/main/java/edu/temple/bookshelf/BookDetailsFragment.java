@@ -8,6 +8,7 @@ import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -21,6 +22,7 @@ public class BookDetailsFragment extends Fragment {
     private Book book;
 
     TextView titleTextView, authorTextView;
+    ImageView coverImageView;
 
     public BookDetailsFragment() {
         // Required empty public constructor
@@ -54,6 +56,7 @@ public class BookDetailsFragment extends Fragment {
 
         titleTextView = v.findViewById(R.id.titleTextView);
         authorTextView = v.findViewById(R.id.authorTextView);
+        coverImageView = v.findViewById(R.id.coverImageView);
 
         // Fragment can be created with or without a book to display when attached
         // so we need to make sure we don't try to display a book if one isn't provided
@@ -71,6 +74,8 @@ public class BookDetailsFragment extends Fragment {
     public void displayBook(Book book){
         titleTextView.setText(book.getTitle());
         authorTextView.setText(book.getAuthor());
+        // TODO give coverImageView a source
+//        coverImageView.setImageURI();
     }
 
 }

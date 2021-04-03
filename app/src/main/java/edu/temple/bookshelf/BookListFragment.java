@@ -16,20 +16,15 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link BookListFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class BookListFragment extends Fragment {
 
     private static final String BOOK_LIST_KEY = "bookList";
     private BookList books;
 
+    // TODO change BookListFragment to a LinearLayout with a button and a ListView
 
     // Since the listView is the parent layout without an id, perhaps it's just the context
 
-//     BookSelectedInterface parentActivity;
     BookListFragmentInterface parentActivity;
 
     public BookListFragment() {
