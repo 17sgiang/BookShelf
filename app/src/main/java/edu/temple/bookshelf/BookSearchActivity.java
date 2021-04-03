@@ -2,6 +2,8 @@ package edu.temple.bookshelf;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -30,7 +32,7 @@ public class BookSearchActivity extends AppCompatActivity {
 
     EditText searchBox;
     Button cancelButton, searchButton;
-
+    private static final String BOOKS_KEY = "booksHere";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +41,8 @@ public class BookSearchActivity extends AppCompatActivity {
         searchBox = findViewById(R.id.search_box);
         cancelButton = findViewById(R.id.cancel_button);
         searchButton = findViewById(R.id.accept_button);
+
+        // TODO Cancel button
 
         searchButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -51,9 +55,8 @@ public class BookSearchActivity extends AppCompatActivity {
 
     }
 
-    private JSONArray callAPI(String args){
+    private void callAPI(String args){
         Log.d("MyTag", "Entered callAPI()");
-
 
         // Instantiate the RequestQueue
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -63,26 +66,24 @@ public class BookSearchActivity extends AppCompatActivity {
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>(){
             @Override
             public void onResponse(String response) {
-                // On success, turn String to JSON object
+                // On success
                 Log.d("MyTag", response);
-                try{
-                    JSONArray books = new JSONArray(response);
-                    // TODO Pass books to the outer method
-                } catch (Exception e) {
-                    // Log error
-                }
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra(BOOKS_KEY, response);
+                setResult(Activity.RESULT_OK, resultIntent);
+                Log.d("MyTag", "Calling finish()");
+                finish();
 
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error){
-                // Error message
+                // TODO error handling
 
             }
         });
 
         queue.add(stringRequest);
-        // Error
-        return null;
+
     }
 }

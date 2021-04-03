@@ -4,14 +4,17 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class Book implements Parcelable {
+
+    private int id;
     private String title;
     private String author;
-    private int id;
     private String coverURL;    // Book cover image URL
 
-    public Book(String title, String author){
+    public Book(int id, String title, String author, String coverURL){
+        this.id = id;
         this.title = title;
         this.author = author;
+        this.coverURL = coverURL;
     }
 
     protected Book(Parcel in) {

@@ -4,10 +4,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
 
@@ -16,15 +20,21 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     boolean twoPane;
     Book selectedBook;
+    BookList bookList;
 
     private final String KEY_SELECTED_BOOK = "selectedBook";
-    public static final String EXTRA_MESSAGE = "edu.temple.bookshelf.MESSAGE";  // Change to something easier
+    public static final String BOOKS_KEY = "booksHere";
+    public static final int SEARCH_REQUEST_CODE = 12434;
+    // TODO find a better solution for the BOOKS_KEY
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if(bookList == null){
+            bookList = new BookList();
+        }
         // Fetch selected book if there was one
         if(savedInstanceState != null){
             selectedBook = savedInstanceState.getParcelable(KEY_SELECTED_BOOK);
@@ -39,9 +49,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if(fragment1 instanceof BookDetailsFragment){
             fm.popBackStack();
         } else if (!(fragment1 instanceof BookListFragment)){
-            // getTestBooks() should just be a relocation of the code I used to access resources
+            // If bookList hasn't been initiated then can't call this
             fm.beginTransaction()
-                    .add(R.id.container_1, BookListFragment.newInstance(getTestBooks()))
+                    .add(R.id.container_1, BookListFragment.newInstance(bookList))
                     .commit();
         }
 
@@ -62,9 +72,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         }
 
-
-
-
         // using .add instead of .replace makes the fragments persist upon rotation, and aren't cleaned up.
         // inefficient, creates a fragment that was already there.
         // Find a solution that doesn't require recreation of the fragment
@@ -72,13 +79,31 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     }
 
-    private BookList getTestBooks(){
-        // Create instance of BookList class and populate it with ten books
-        BookList bookList = new BookList();
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == SEARCH_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null){
+            String booksOutput = data.getStringExtra(BOOKS_KEY);
+            try{
+                JSONArray books = new JSONArray(booksOutput);
+                BookList newBookList = new BookList();
+                // Populate the bookList
+                // If this solution doesn't work, iterate through current bookList and empty it before adding.
+                for(int i = 0; i < books.length(); i++){
+                    JSONObject current = (JSONObject) books.get(i);
+                    newBookList.add(new Book(Integer.parseInt((String)current.get("id")), (String)current.get("title"), (String)current.get("author"), (String)current.get("cover_url")));
+                }
+                bookList = newBookList;
+                Log.d("MyTag", bookList.toString());
+                // This might cause pointer issues
 
-
-        return bookList;
-    };
+                // Notify the BookListFragment of the data set changing
+            } catch (Exception e){
+                // Error handling
+                Log.d("MyTag", e.getMessage());
+            }
+        }
+    }
 
     // MainActivity should check the layout through presence of containers
     // Depending on check, different actions should be taken when items are clicked
@@ -88,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     // One of the BookListFragmentInterface methods
     public void bookSelected(int index){
         // Store the selected book to use later if activity restarts
-        selectedBook = getTestBooks().get(index);
+        selectedBook = bookList.get(index);
 
         if(twoPane){
             // Display selected book using previously attached fragment
@@ -107,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         Intent intent = new Intent(this, BookSearchActivity.class);
         // Putting data into the intent
         // Starting Activity
-        startActivity(intent);
+        startActivityForResult(intent, SEARCH_REQUEST_CODE);
 
     }
 
