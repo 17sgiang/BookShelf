@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -78,10 +79,11 @@ public class BookListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        ListView listView = (ListView) inflater.inflate(R.layout.fragment_book_list, container,false);
+        View v  =  inflater.inflate(R.layout.fragment_book_list, container,false);
+
+        ListView listView = (ListView)((LinearLayout)v).getChildAt(1);
 
         listView.setAdapter(new BookListAdapter(getContext(), books));
-
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id){
@@ -97,7 +99,7 @@ public class BookListFragment extends Fragment {
         // Get a reference to any Views in the layout
 //        listView = layout.findViewById();
 
-        return listView;
+        return v;
     }
 
 //    public void setBookList(BookList newBookList) {
