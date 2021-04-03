@@ -74,6 +74,7 @@ public class BookDetailsFragment extends Fragment {
     public void displayBook(Book book){
         titleTextView.setText(book.getTitle());
         authorTextView.setText(book.getAuthor());
+
         // TODO give coverImageView a source
 //        coverImageView.setImageURI();
     }

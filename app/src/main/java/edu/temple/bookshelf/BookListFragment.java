@@ -22,8 +22,6 @@ public class BookListFragment extends Fragment {
 
     private static final String BOOK_LIST_KEY = "bookList";
     private BookList books;
-    private Button searchButton;
-    private ListView listView;
     private BookListAdapter bookListAdapter;
     // Since the listView is the parent layout without an id, perhaps it's just the context
 
@@ -80,19 +78,10 @@ public class BookListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v  =  inflater.inflate(R.layout.fragment_book_list, container,false);
-
-        searchButton = (Button)((LinearLayout)v).getChildAt(0);
-
-        searchButton.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-                parentActivity.startSearch();
-            }
-        });
+        ListView listView  = (ListView) inflater.inflate(R.layout.fragment_book_list, container,false);
 
         bookListAdapter = new BookListAdapter(getContext(), books);
 
-        listView = (ListView)((LinearLayout)v).getChildAt(1);
         listView.setAdapter(bookListAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
@@ -107,7 +96,7 @@ public class BookListFragment extends Fragment {
         // When one of the books is clicked, fragment invokes a method in its parent with index of book
 
 
-        return v;
+        return listView;
     }
 
     public void updateBookList() {
@@ -126,7 +115,6 @@ public class BookListFragment extends Fragment {
 
         void bookSelected(int index);
 
-        void startSearch();
     }
 
 }

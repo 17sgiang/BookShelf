@@ -57,5 +57,8 @@ public class Book implements Parcelable {
         return title;
     }
 
+    public String getCoverURL() {
+        return coverURL;
+    }
 
 }

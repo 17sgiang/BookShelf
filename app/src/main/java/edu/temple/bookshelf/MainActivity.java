@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     boolean twoPane;
     Book selectedBook;
     BookList bookList;
+    Button searchButton;
 
     private final String KEY_SELECTED_BOOK = "selectedBook";
     public static final String BOOKS_KEY = "booksHere";
@@ -40,6 +43,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if(savedInstanceState != null){
             selectedBook = savedInstanceState.getParcelable(KEY_SELECTED_BOOK);
         }
+
+
 
         twoPane = findViewById(R.id.container_2) != null;
         fm = getSupportFragmentManager();
@@ -77,7 +82,17 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         // using .add instead of .replace makes the fragments persist upon rotation, and aren't cleaned up.
         // inefficient, creates a fragment that was already there.
         // Find a solution that doesn't require recreation of the fragment
-
+        searchButton = findViewById(R.id.search_open_button);
+        searchButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                // Create Intent
+                Intent intent = new Intent(MainActivity.this, BookSearchActivity.class);
+                // Putting data into the intent
+                // Starting Activity
+                startActivityForResult(intent, SEARCH_REQUEST_CODE);
+            }
+        });
 
     }
 
@@ -99,9 +114,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 // Notify the BookListFragment of the data set changing
                 bookListFragment.updateBookList();
 
+                if(!twoPane){
+                    // TODO make sure twoPane gets updated
+                    // TODO in small screen mode, remove container2
+
+                }
+
+
             } catch (Exception e){
                 // Error handling
-                Log.d("MyTag", e.getMessage());
+                Log.e("Error", e.getMessage());
             }
         }
     }
@@ -126,15 +148,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     .addToBackStack(null)
                     .commit();
         }
-    }
-
-    public void startSearch(){
-        // Create Intent
-        Intent intent = new Intent(this, BookSearchActivity.class);
-        // Putting data into the intent
-        // Starting Activity
-        startActivityForResult(intent, SEARCH_REQUEST_CODE);
-
     }
 
     @Override

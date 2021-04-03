@@ -7,9 +7,17 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <Button
+        android:id="@+id/search_open_button"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:text="@string/search_text"
+        app:layout_constraintTop_toTopOf="parent">
+    </Button>
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/container_1" />
+        android:layout_height="wrap_content"
+        android:id="@+id/container_1"
+        app:layout_constraintTop_toBottomOf="@+id/search_open_button"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
