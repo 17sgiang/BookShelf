@@ -1,2 +1,2 @@
-include ':app'
+include ':audiobook-player', ':app'
 rootProject.name = "BookShelf"
