@@ -39,7 +39,8 @@ public class BookSearchActivity extends AppCompatActivity {
     private final String urlPrefix = "https://kamorris.com/lab/cis3515/search.php?term=";
 
     // JSON object fields for a book
-    private final String id = "id", title = "title", author = "author", cover_url = "cover_url";
+    private final String id = "id", title = "title", author = "author",
+            cover_url = "cover_url", duration = "duration";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +101,7 @@ public class BookSearchActivity extends AppCompatActivity {
         for(int i = 0; i < booksArray.length(); i++){
             try {
                 tempBook = booksArray.getJSONObject(i);
-                bookList.add(new Book(tempBook.getInt(id), tempBook.getString(title), tempBook.getString(author), tempBook.getString(cover_url)));
+                bookList.add(new Book(tempBook.getInt(id), tempBook.getString(title), tempBook.getString(author), tempBook.getString(cover_url), tempBook.getInt(duration)));
 
             } catch (JSONException e){
                 e.printStackTrace();

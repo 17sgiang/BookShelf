@@ -108,7 +108,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if(requestCode == SEARCH_REQUEST_CODE && resultCode == RESULT_OK){
 
             bookList.clear();
-            // TODO Figure out why this Intent isn't passing anything
             bookList.addAll((BookList) data.getParcelableExtra(BookSearchActivity.BOOKLIST_KEY));
 
             if(bookList.size() == 0){

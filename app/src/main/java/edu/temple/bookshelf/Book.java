@@ -9,12 +9,14 @@ public class Book implements Parcelable {
     private String title;
     private String author;
     private String coverUrl;    // Book cover image URL
+    private int duration;
 
-    public Book(int id, String title, String author, String coverUrl){
+    public Book(int id, String title, String author, String coverUrl, int duration){
         this.id = id;
         this.title = title;
         this.author = author;
         this.coverUrl = coverUrl;
+        this.duration = duration;
     }
 
     protected Book(Parcel in) {
@@ -22,6 +24,7 @@ public class Book implements Parcelable {
         title = in.readString();
         author = in.readString();
         coverUrl = in.readString();
+        duration = in.readInt();
     }
 
     public static final Creator<Book> CREATOR = new Creator<Book>() {
@@ -47,6 +50,7 @@ public class Book implements Parcelable {
         dest.writeString(title);
         dest.writeString(author);
         dest.writeString(coverUrl);
+        dest.writeInt(duration);
     }
 
     // Method to return a formatted String containing title and author?
@@ -66,5 +70,7 @@ public class Book implements Parcelable {
     public String getCoverURL() {
         return coverUrl;
     }
+
+    public int getDuration() { return duration;}
 
 }
