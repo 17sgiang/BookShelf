@@ -1,5 +1,6 @@
 package edu.temple.bookshelf;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,25 +28,27 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     BookList bookList;
     Button searchButton;
 
+    private final String TAG_BOOKLIST = "booklist", TAG_BOOKDETAILS = "bookdetails";
     private final String KEY_SELECTED_BOOK = "selectedBook";
-    public static final String BOOKS_KEY = "booksHere";
+    private final String KEY_BOOKLIST = "booksHere";
     public static final int SEARCH_REQUEST_CODE = 12434;
-    // TODO find a better solution for the BOOKS_KEY
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(bookList == null){
-            bookList = new BookList();
-        }
         // Fetch selected book if there was one
         if(savedInstanceState != null){
+            // Fetch selected book if there was one
             selectedBook = savedInstanceState.getParcelable(KEY_SELECTED_BOOK);
+
+            // Fetch previously searched books if one was previously retrieved
+            bookList = savedInstanceState.getParcelable(KEY_BOOKLIST);
+
+        } else {
+            bookList = new BookList();
         }
-
-
 
         twoPane = findViewById(R.id.container_2) != null;
         fm = getSupportFragmentManager();
@@ -58,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             // If bookList hasn't been initiated then can't call this
             bookListFragment = BookListFragment.newInstance(bookList);
             fm.beginTransaction()
-                    .add(R.id.container_1, bookListFragment)
+                    .add(R.id.container_1, bookListFragment, TAG_BOOKLIST)
                     .commit();
         }
 
@@ -67,13 +71,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         if(twoPane){
             fm.beginTransaction()
-                    .replace(R.id.container_2, bookDetailsFragment)
+                    .replace(R.id.container_2, bookDetailsFragment, TAG_BOOKDETAILS)
                     .commit();
         } else if (selectedBook != null){
             // If a book was selected and we have a single container
             // Replace BookListFragment with BookDetailsFragment, making the transaction reversible
             fm.beginTransaction()
-                    .replace(R.id.container_1, bookDetailsFragment)
+                    .replace(R.id.container_1, bookDetailsFragment, TAG_BOOKDETAILS)
                     .addToBackStack(null)
                     .commit();
 
@@ -97,34 +101,23 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
+
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == SEARCH_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null){
-            String booksOutput = data.getStringExtra(BOOKS_KEY);
-            try{
-                JSONArray books = new JSONArray(booksOutput);
-                // Populate the bookList
-                bookList.clear();
-                for(int i = 0; i < books.length(); i++){
-                    JSONObject current = (JSONObject) books.get(i);
-                    bookList.add(new Book(Integer.parseInt((String)current.get("id")), (String)current.get("title"), (String)current.get("author"), (String)current.get("cover_url")));
-                }
-                Log.d("MyTag", bookList.toString());
 
-                // Notify the BookListFragment of the data set changing
-                bookListFragment.updateBookList();
+        if(requestCode == SEARCH_REQUEST_CODE && resultCode == RESULT_OK){
 
-                if(!twoPane){
-                    // TODO make sure twoPane gets updated
-                    // TODO in small screen mode, remove container2
+            bookList.clear();
+            // TODO Figure out why this Intent isn't passing anything
+            bookList.addAll((BookList) data.getParcelableExtra(BookSearchActivity.BOOKLIST_KEY));
 
-                }
-
-
-            } catch (Exception e){
-                // Error handling
-                Log.e("Error", e.getMessage());
+            if(bookList.size() == 0){
+                Toast.makeText(this, "No books matched your search", Toast.LENGTH_SHORT).show();
             }
+            showNewBooks();
+
+            // Notify the BookListFragment of the data set changing
+//            bookListFragment.updateBookList();
         }
     }
 
@@ -144,10 +137,17 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         } else {
             // Display book using new fragment
             fm.beginTransaction()
-                    .replace(R.id.container_1, BookDetailsFragment.newInstance(selectedBook))
+                    .replace(R.id.container_1, BookDetailsFragment.newInstance(selectedBook), TAG_BOOKDETAILS)
                     .addToBackStack(null)
                     .commit();
         }
+    }
+
+    private void showNewBooks(){
+        if((fm.findFragmentByTag(TAG_BOOKDETAILS) instanceof BookDetailsFragment)){
+            fm.popBackStack();
+        }
+        ((BookListFragment) fm.findFragmentByTag(TAG_BOOKLIST)).showNewBooks();
     }
 
     @Override
@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         super.onSaveInstanceState(outState);
         // Saves selected book
         outState.putParcelable(KEY_SELECTED_BOOK, selectedBook);
+        outState.putParcelable(KEY_BOOKLIST, bookList);
     }
 
     @Override

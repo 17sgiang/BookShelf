@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -23,6 +24,7 @@ public class BookListFragment extends Fragment {
     private static final String BOOK_LIST_KEY = "bookList";
     private BookList books;
     private BookListAdapter bookListAdapter;
+    private ListView listView;
     // Since the listView is the parent layout without an id, perhaps it's just the context
 
     BookListFragmentInterface parentActivity;
@@ -78,7 +80,7 @@ public class BookListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        ListView listView  = (ListView) inflater.inflate(R.layout.fragment_book_list, container,false);
+        listView  = (ListView) inflater.inflate(R.layout.fragment_book_list, container,false);
 
         bookListAdapter = new BookListAdapter(getContext(), books);
 
@@ -99,14 +101,11 @@ public class BookListFragment extends Fragment {
         return listView;
     }
 
-    public void updateBookList() {
-//        Log.d("MyTag", newBookList.toString());
-//        books.clear();
-//        for(int i = 0; i < newBookList.size(); i++){
-//            books.add(newBookList.get(i));
-//        }
+    public void showNewBooks() {
+
         // Notify the adapter of updated data set
-        bookListAdapter.notifyDataSetChanged();
+        ((BaseAdapter) listView.getAdapter()).notifyDataSetChanged();
+//        bookListAdapter.notifyDataSetChanged();
     }
 
 
@@ -114,7 +113,6 @@ public class BookListFragment extends Fragment {
     interface BookListFragmentInterface{
 
         void bookSelected(int index);
-
     }
 
 }

@@ -2,22 +2,21 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:theme="@style/Theme.MaterialComponents.DayNight.Dialog"
     android:excludeFromRecents="true"
     android:layout_width="256dp"
     android:layout_height="wrap_content"
     tools:context=".BookSearchActivity">
 
-    <TextView
-        android:id="@+id/dialog_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="24sp"
-        android:layout_margin="6dp"
-        android:text="@string/search_text"
-        app:layout_constraintTop_toTopOf="parent">
+<!--    <TextView-->
+<!--        android:id="@+id/dialog_title"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:textSize="24sp"-->
+<!--        android:layout_margin="6dp"-->
+<!--        android:text="@string/search_text"-->
+<!--        app:layout_constraintTop_toTopOf="parent">-->
 
-    </TextView>
+<!--    </TextView>-->
 
     <EditText
         android:id="@+id/search_box"
@@ -26,7 +25,7 @@
         android:layout_margin="6dp"
         android:inputType="text"
         android:hint="@string/search_hints"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_title" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/cancel_button"

@@ -2,6 +2,7 @@ package edu.temple.bookshelf;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -10,7 +11,7 @@ public class BookList implements Parcelable {
     private ArrayList<Book> books;
 
     protected BookList(Parcel in) {
-        books = new ArrayList<>();
+        books = in.createTypedArrayList(Book.CREATOR);
     }
 
     // Overloading or whatever the term was for when I don't need to make from Parcel
@@ -20,6 +21,7 @@ public class BookList implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(books);
     }
 
     @Override
@@ -46,9 +48,15 @@ public class BookList implements Parcelable {
         books.add(book);
     }
 
-    public ArrayList<Book> getBookArrayList(){
-        return books;
+    public void addAll (BookList books) {
+        for( int i = 0; i < books.size(); i++) {
+            this.books.add(books.get(i));
+        }
     }
+
+//    public ArrayList<Book> getBookArrayList(){
+//        return books;
+//    }
 
     public Book get(int position){
         return books.get(position);

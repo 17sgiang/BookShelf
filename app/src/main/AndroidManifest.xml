@@ -19,7 +19,9 @@
                app to run.
         -->
 
-        <activity android:name=".BookSearchActivity" />
+        <activity android:name=".BookSearchActivity"
+            android:theme="@style/Theme.AppCompat.Dialog"
+            android:label="Search"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
