@@ -6,25 +6,33 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import edu.temple.audiobookplayer.AudiobookService;
 
-public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
+public class MainActivity
+        extends AppCompatActivity
+        implements BookListFragment.BookListFragmentInterface ,
+        ControlFragment.ControlFragmentInterface {
 
     FragmentManager fm;
     ControlFragment controlFragment;
     BookDetailsFragment bookDetailsFragment;
     BookListFragment bookListFragment;
 
+    AudiobookService.MediaControlBinder mediaControlBinder;
+    boolean isConnected;
 
+    // IntentService for threads
     boolean twoPane;
     Book selectedBook;
     BookList bookList;
@@ -85,6 +93,28 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         }
 
+        // IBinder is an interface, describes the interface of the service.
+        // Connect by calling bindService()
+
+        ServiceConnection serviceConnection = new ServiceConnection() {
+
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                mediaControlBinder = (AudiobookService.MediaControlBinder) binder;
+                isConnected = true;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                isConnected = false;
+            }
+        };
+
+        Intent serviceIntent = new Intent(MainActivity.this, AudiobookService.class);
+//        serviceIntent.putExtra();
+        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
+
+
         controlFragment = ControlFragment.newInstance();
 
         fm.beginTransaction()
@@ -121,10 +151,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             if(bookList.size() == 0){
                 Toast.makeText(this, "No books matched your search", Toast.LENGTH_SHORT).show();
             }
+            // showNewBooks() notifies the BookListFragment of the data set changing
             showNewBooks();
 
-            // Notify the BookListFragment of the data set changing
-//            bookListFragment.updateBookList();
         }
     }
 
@@ -157,6 +186,27 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         ((BookListFragment) fm.findFragmentByTag(TAG_BOOKLIST)).showNewBooks();
     }
 
+    // TODO implement ControlFragmentInterface
+    @Override
+    public void bookPlay() {
+        // Default
+        if(selectedBook != null){
+            mediaControlBinder.play(selectedBook.getId());
+            // Update now playing
+        }
+    }
+
+    @Override
+    public void bookPause() {
+        mediaControlBinder.pause();
+    }
+
+    @Override
+    public void bookStop() {
+        mediaControlBinder.stop();
+        // Update now playing
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState){
         super.onSaveInstanceState(outState);
@@ -172,4 +222,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         super.onBackPressed();
 
     }
+
+
 }
