@@ -20,15 +20,17 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity implements BookListFragment.BookListFragmentInterface {
 
     FragmentManager fm;
+    ControlFragment controlFragment;
     BookDetailsFragment bookDetailsFragment;
     BookListFragment bookListFragment;
+
 
     boolean twoPane;
     Book selectedBook;
     BookList bookList;
     Button searchButton;
 
-    private final String TAG_BOOKLIST = "booklist", TAG_BOOKDETAILS = "bookdetails";
+    private final String TAG_BOOKLIST = "booklist", TAG_BOOKDETAILS = "bookdetails", TAG_CONTROL = "control";
     private final String KEY_SELECTED_BOOK = "selectedBook";
     private final String KEY_BOOKLIST = "booksHere";
     public static final int SEARCH_REQUEST_CODE = 12434;
@@ -82,6 +84,12 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     .commit();
 
         }
+
+        controlFragment = ControlFragment.newInstance();
+
+        fm.beginTransaction()
+                .add(R.id.control_container, controlFragment, TAG_CONTROL)
+                .commit();
 
         // using .add instead of .replace makes the fragments persist upon rotation, and aren't cleaned up.
         // inefficient, creates a fragment that was already there.

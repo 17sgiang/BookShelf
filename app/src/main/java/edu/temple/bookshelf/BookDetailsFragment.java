@@ -20,11 +20,6 @@ import com.bumptech.glide.Glide;
 import java.io.InputStream;
 import java.net.URL;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link BookDetailsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class BookDetailsFragment extends Fragment {
 
     private static final String BOOK_KEY = "book";
