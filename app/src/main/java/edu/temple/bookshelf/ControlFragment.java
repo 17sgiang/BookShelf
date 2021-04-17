@@ -3,6 +3,7 @@ package edu.temple.bookshelf;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -18,7 +19,6 @@ public class ControlFragment extends Fragment {
     Button pauseButton, playButton, stopButton;
     TextView nowPlayingTextView;
     SeekBar seekBar;
-    boolean isKilled;
     ControlFragmentInterface parentActivity;
 
     public ControlFragment() {
@@ -26,7 +26,7 @@ public class ControlFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
 
         // Fragment needs to communicate with parent activity
@@ -52,9 +52,6 @@ public class ControlFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        if (getArguments() != null) {
-        }
     }
 
     @Override
@@ -91,15 +88,30 @@ public class ControlFragment extends Fragment {
             }
         });
 
+        parentActivity.setControlReferences(v.findViewById(R.id.seek_bar), nowPlayingTextView);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    parentActivity.updateSeekProgress(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
         return v;
     }
 
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        isKilled = true;
-    }
     // To call methods in ParentActivity
     interface ControlFragmentInterface {
         // Play button
@@ -108,10 +120,12 @@ public class ControlFragment extends Fragment {
         void bookPause();
         // Stop button
         void bookStop();
+
         // Now playing? Maybe just integrate into bookPlay()
 
-        // TODO Seek bar
+        void updateSeekProgress(int progress);
 
+        void setControlReferences(SeekBar seekBar, TextView nowPlayingTextView);
 
     }
 }

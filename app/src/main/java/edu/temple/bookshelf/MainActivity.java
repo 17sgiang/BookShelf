@@ -1,5 +1,6 @@
 package edu.temple.bookshelf;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -11,10 +12,16 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import edu.temple.audiobookplayer.AudiobookService;
@@ -29,6 +36,7 @@ public class MainActivity
     BookDetailsFragment bookDetailsFragment;
     BookListFragment bookListFragment;
 
+    Handler progressHandler;
     AudiobookService.MediaControlBinder mediaControlBinder;
     boolean isConnected;
 
@@ -38,9 +46,13 @@ public class MainActivity
     BookList bookList;
     Button searchButton;
 
+    SeekBar seekBar;
+    TextView nowPlayingTextView;
+
     private final String TAG_BOOKLIST = "booklist", TAG_BOOKDETAILS = "bookdetails", TAG_CONTROL = "control";
     private final String KEY_SELECTED_BOOK = "selectedBook";
     private final String KEY_BOOKLIST = "booksHere";
+    private final String KEY_PROGRESS = "progress";
     public static final int SEARCH_REQUEST_CODE = 12434;
 
     @Override
@@ -63,6 +75,45 @@ public class MainActivity
         twoPane = findViewById(R.id.container_2) != null;
         fm = getSupportFragmentManager();
 
+        // IBinder is an interface, describes the interface of the service.
+        // Connect by calling bindService()
+        progressHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
+            @Override
+            public boolean handleMessage(@NonNull Message msg) {
+                if(seekBar != null && msg.obj != null) {
+                    seekBar.setProgress(((AudiobookService.BookProgress)msg.obj).getProgress());
+                }
+                return true;
+                // If done with message after this, then return true
+            }
+        });
+
+
+        ServiceConnection serviceConnection = new ServiceConnection() {
+
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                mediaControlBinder = (AudiobookService.MediaControlBinder) binder;
+                mediaControlBinder.setProgressHandler(progressHandler);
+                isConnected = true;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                isConnected = false;
+            }
+        };
+
+        Intent serviceIntent = new Intent(MainActivity.this, AudiobookService.class);
+//        serviceIntent.putExtra();
+        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
+
+        controlFragment = ControlFragment.newInstance();
+        fm.beginTransaction()
+                .add(R.id.control_container, controlFragment, TAG_CONTROL)
+                .commit();
+
+
         Fragment fragment1 = fm.findFragmentById(R.id.container_1);
         // Fragment fragment1 = fm.findFragmentByTag();     // Circumvents timing issues
 
@@ -72,7 +123,7 @@ public class MainActivity
             // If bookList hasn't been initiated then can't call this
             bookListFragment = BookListFragment.newInstance(bookList);
             fm.beginTransaction()
-                    .add(R.id.container_1, bookListFragment, TAG_BOOKLIST)
+                    .replace(R.id.container_1, bookListFragment, TAG_BOOKLIST)
                     .commit();
         }
 
@@ -92,34 +143,6 @@ public class MainActivity
                     .commit();
 
         }
-
-        // IBinder is an interface, describes the interface of the service.
-        // Connect by calling bindService()
-
-        ServiceConnection serviceConnection = new ServiceConnection() {
-
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder binder) {
-                mediaControlBinder = (AudiobookService.MediaControlBinder) binder;
-                isConnected = true;
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                isConnected = false;
-            }
-        };
-
-        Intent serviceIntent = new Intent(MainActivity.this, AudiobookService.class);
-//        serviceIntent.putExtra();
-        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
-
-
-        controlFragment = ControlFragment.newInstance();
-
-        fm.beginTransaction()
-                .add(R.id.control_container, controlFragment, TAG_CONTROL)
-                .commit();
 
         // using .add instead of .replace makes the fragments persist upon rotation, and aren't cleaned up.
         // inefficient, creates a fragment that was already there.
@@ -161,6 +184,14 @@ public class MainActivity
     // Depending on check, different actions should be taken when items are clicked
     // If mobile layout, should replace with BookDetails Fragment to the BackStack
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(selectedBook != null) {
+            seekBar.setMax(selectedBook.getDuration());
+
+        }
+    }
 
     // One of the BookListFragmentInterface methods
     public void bookSelected(int index){
@@ -186,13 +217,16 @@ public class MainActivity
         ((BookListFragment) fm.findFragmentByTag(TAG_BOOKLIST)).showNewBooks();
     }
 
-    // TODO implement ControlFragmentInterface
+    // ControlFragmentInterface method implementation
     @Override
     public void bookPlay() {
         // Default
         if(selectedBook != null){
             mediaControlBinder.play(selectedBook.getId());
             // Update now playing
+            seekBar.setMax(selectedBook.getDuration());
+            String displayText = "Now playing: " + selectedBook.getTitle();
+            nowPlayingTextView.setText(displayText);
         }
     }
 
@@ -205,14 +239,31 @@ public class MainActivity
     public void bookStop() {
         mediaControlBinder.stop();
         // Update now playing
+        seekBar.setProgress(0);
+        nowPlayingTextView.setText("");
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState){
+    public void updateSeekProgress(int progress){
+        if(selectedBook != null) {
+            mediaControlBinder.seekTo(progress);
+        }
+    }
+
+    @Override
+    public void setControlReferences(SeekBar seekBar, TextView nowPlayingTextView){
+        this.seekBar = seekBar;
+        this.nowPlayingTextView = nowPlayingTextView;
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState){
         super.onSaveInstanceState(outState);
         // Saves selected book
         outState.putParcelable(KEY_SELECTED_BOOK, selectedBook);
         outState.putParcelable(KEY_BOOKLIST, bookList);
+        outState.putParcelable(KEY_PROGRESS, seekBar.onSaveInstanceState());
     }
 
     @Override
