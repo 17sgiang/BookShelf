@@ -42,17 +42,20 @@ public class MainActivity
 
     // IntentService for threads
     boolean twoPane;
-    Book selectedBook;
+    Book selectedBook, playingBook;
     BookList bookList;
     Button searchButton;
 
     SeekBar seekBar;
     TextView nowPlayingTextView;
+    Intent serviceIntent;
+    ServiceConnection serviceConnection;
 
     private final String TAG_BOOKLIST = "booklist", TAG_BOOKDETAILS = "bookdetails", TAG_CONTROL = "control";
     private final String KEY_SELECTED_BOOK = "selectedBook";
     private final String KEY_BOOKLIST = "booksHere";
     private final String KEY_PROGRESS = "progress";
+    private final String KEY_PLAYING_BOOK = "playingBook";
     public static final int SEARCH_REQUEST_CODE = 12434;
 
     @Override
@@ -89,7 +92,7 @@ public class MainActivity
         });
 
 
-        ServiceConnection serviceConnection = new ServiceConnection() {
+        serviceConnection = new ServiceConnection() {
 
             @Override
             public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -104,7 +107,7 @@ public class MainActivity
             }
         };
 
-        Intent serviceIntent = new Intent(MainActivity.this, AudiobookService.class);
+        serviceIntent = new Intent(MainActivity.this, AudiobookService.class);
 //        serviceIntent.putExtra();
         bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
 
@@ -222,17 +225,20 @@ public class MainActivity
     public void bookPlay() {
         // Default
         if(selectedBook != null){
-            mediaControlBinder.play(selectedBook.getId());
-            // Update now playing
-            seekBar.setMax(selectedBook.getDuration());
-            String displayText = "Now playing: " + selectedBook.getTitle();
-            nowPlayingTextView.setText(displayText);
+            playingBook = selectedBook;
+
+            if(isConnected){
+                mediaControlBinder.play(playingBook.getId());
+            }
+            startService(serviceIntent);
         }
     }
 
     @Override
     public void bookPause() {
-        mediaControlBinder.pause();
+        if(isConnected) {
+            mediaControlBinder.pause();
+        }
     }
 
     @Override
@@ -245,8 +251,22 @@ public class MainActivity
 
     @Override
     public void updateSeekProgress(int progress){
-        if(selectedBook != null) {
+        if(playingBook != null) {
             mediaControlBinder.seekTo(progress);
+        }
+    }
+
+
+    @Override
+    public void updateNowPlaying(){
+        if(playingBook != null){
+            // Update now playing
+            seekBar.setMax(playingBook.getDuration());
+            String displayText = "Now playing: " + playingBook.getTitle();
+            nowPlayingTextView.setText(displayText);
+        } else {
+            // No book
+            nowPlayingTextView.setText("");
         }
     }
 
@@ -256,7 +276,6 @@ public class MainActivity
         this.nowPlayingTextView = nowPlayingTextView;
     }
 
-
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState){
         super.onSaveInstanceState(outState);
@@ -264,15 +283,21 @@ public class MainActivity
         outState.putParcelable(KEY_SELECTED_BOOK, selectedBook);
         outState.putParcelable(KEY_BOOKLIST, bookList);
         outState.putParcelable(KEY_PROGRESS, seekBar.onSaveInstanceState());
+        outState.putParcelable(KEY_PLAYING_BOOK, playingBook);
     }
+
 
     @Override
     public void onBackPressed() {
         // If the user hits the back button, clear the selected book
-        selectedBook = null;
         super.onBackPressed();
-
+        selectedBook = null;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unbindService(serviceConnection);
+    }
 
 }

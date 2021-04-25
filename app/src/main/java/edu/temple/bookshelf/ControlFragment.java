@@ -122,6 +122,7 @@ public class ControlFragment extends Fragment {
         void bookStop();
 
         // Now playing? Maybe just integrate into bookPlay()
+        void updateNowPlaying();
 
         void updateSeekProgress(int progress);
 
