@@ -128,5 +128,7 @@ public class ControlFragment extends Fragment {
 
         void setControlReferences(SeekBar seekBar, TextView nowPlayingTextView);
 
+        void downloadBook(String downloadString);
+
     }
 }

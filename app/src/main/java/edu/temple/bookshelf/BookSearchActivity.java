@@ -19,6 +19,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -93,7 +94,7 @@ public class BookSearchActivity extends AppCompatActivity {
 
     }
 
-    private BookList getBookListFromJsonArray(JSONArray booksArray) {
+    public BookList getBookListFromJsonArray(JSONArray booksArray) {
         BookList bookList = new BookList();
         JSONObject tempBook;
 
@@ -109,5 +110,8 @@ public class BookSearchActivity extends AppCompatActivity {
         }
         return bookList;
     }
+
+
+
 
 }

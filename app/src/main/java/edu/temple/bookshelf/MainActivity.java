@@ -3,15 +3,21 @@ package edu.temple.bookshelf;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -23,6 +29,21 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.prefs.Preferences;
 
 import edu.temple.audiobookplayer.AudiobookService;
 
@@ -36,6 +57,8 @@ public class MainActivity
     BookDetailsFragment bookDetailsFragment;
     BookListFragment bookListFragment;
 
+    SharedPreferences preferences;
+    SharedPreferences.Editor editor;
     Handler progressHandler;
     AudiobookService.MediaControlBinder mediaControlBinder;
     boolean isConnected;
@@ -50,6 +73,7 @@ public class MainActivity
     TextView nowPlayingTextView;
     Intent serviceIntent;
     ServiceConnection serviceConnection;
+    int seekProgress;
 
     private final String TAG_BOOKLIST = "booklist", TAG_BOOKDETAILS = "bookdetails", TAG_CONTROL = "control";
     private final String KEY_SELECTED_BOOK = "selectedBook";
@@ -63,14 +87,21 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Gson gson = new Gson();
+        preferences = getPreferences(MODE_PRIVATE);
+        editor = preferences.edit();
+        bookList = gson.fromJson(preferences.getString(KEY_BOOKLIST, null), BookList.class);
+        selectedBook = gson.fromJson(preferences.getString(KEY_SELECTED_BOOK, null), Book.class);
+        playingBook = gson.fromJson(preferences.getString(KEY_PLAYING_BOOK, null), Book.class);
+        seekProgress = preferences.getInt(KEY_PROGRESS, 0);
+
         // Fetch selected book if there was one
         if(savedInstanceState != null){
             // Fetch selected book if there was one
             selectedBook = savedInstanceState.getParcelable(KEY_SELECTED_BOOK);
-
             // Fetch previously searched books if one was previously retrieved
             bookList = savedInstanceState.getParcelable(KEY_BOOKLIST);
-
+            seekProgress = savedInstanceState.getInt(KEY_PROGRESS);
         } else {
             bookList = new BookList();
         }
@@ -90,7 +121,6 @@ public class MainActivity
                 // If done with message after this, then return true
             }
         });
-
 
         serviceConnection = new ServiceConnection() {
 
@@ -115,6 +145,9 @@ public class MainActivity
         fm.beginTransaction()
                 .add(R.id.control_container, controlFragment, TAG_CONTROL)
                 .commit();
+
+        // controlFragment's onCreateView function hasn't been called yet here
+        // Because it's asynchronous, but we need to update various information.
 
 
         Fragment fragment1 = fm.findFragmentById(R.id.container_1);
@@ -144,7 +177,6 @@ public class MainActivity
                     .replace(R.id.container_1, bookDetailsFragment, TAG_BOOKDETAILS)
                     .addToBackStack(null)
                     .commit();
-
         }
 
         // using .add instead of .replace makes the fragments persist upon rotation, and aren't cleaned up.
@@ -196,6 +228,18 @@ public class MainActivity
         }
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        Gson gson = new Gson();
+        editor.putString(KEY_BOOKLIST, gson.toJson(bookList));
+        editor.putString(KEY_PLAYING_BOOK, gson.toJson(playingBook));
+        editor.putString(KEY_SELECTED_BOOK, gson.toJson(selectedBook));
+        editor.putInt(KEY_PROGRESS, seekBar.getProgress());
+        editor.apply();
+    }
+
     // One of the BookListFragmentInterface methods
     public void bookSelected(int index){
         // Store the selected book to use later if activity restarts
@@ -223,13 +267,42 @@ public class MainActivity
     // ControlFragmentInterface method implementation
     @Override
     public void bookPlay() {
-        // Default
-        if(selectedBook != null){
-            playingBook = selectedBook;
 
-            if(isConnected){
-                mediaControlBinder.play(playingBook.getId());
+        if(selectedBook != null){
+
+            playingBook = selectedBook;
+            updateNowPlaying();
+
+            String downloadString = "https://kamorris.com/lab/audlib/download.php?id=" + playingBook.getId();
+            Log.d("MyTag", "downloadString: " + downloadString);
+            // greatexpectations_01_dickens_64kb.mp3
+            // TODO figure out how to generate this filename
+            // Rather than generating it, try getting it from the Book object
+            // If fileName is null, then the book hasn't been downloaded.
+            // If the book downloads, then set the book's fileName
+            // Be careful about which version of the book you edit, might not persist
+
+            String fileName = null;
+
+            if(fileName != null){
+
+                // file's declaration might have to be moved to increase scope
+                File file = new File(getFilesDir(), fileName);
+                // If downloaded, play the book from downloaded source instead of streaming it
+                if(isConnected){
+                    Log.d("MyTag", "Playing from file");
+                    mediaControlBinder.play(file);
+                }
+            } else {
+                // Stream as usual
+                // Also begin downloading the book in the background
+                downloadBook(downloadString);
+
+                if(isConnected){
+                    mediaControlBinder.play(playingBook.getId());
+                }
             }
+            // TODO Consider moving startService()
             startService(serviceIntent);
         }
     }
@@ -239,6 +312,40 @@ public class MainActivity
         if(isConnected) {
             mediaControlBinder.pause();
         }
+    }
+
+    @Override
+    public void downloadBook(String downloadString) {
+
+        Log.d("MyTag", "Downloading");
+        // Download the audiobook
+        DownloadManager.Request req = new DownloadManager.Request(Uri.parse(downloadString));
+        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        DownloadManager.Query query = new DownloadManager.Query();
+        query.setFilterByStatus(DownloadManager.STATUS_FAILED | DownloadManager.STATUS_SUCCESSFUL);
+        DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        long downloadId = dm.enqueue(req);
+
+
+        // Set the fileName to downloadedBooks (Map<Integer, Book>)
+//        dm.
+        Cursor c = dm.query(query);
+        int status;
+        // Checks and returns status
+        if(c.moveToFirst()){
+            status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+
+            switch(status){
+                case DownloadManager.STATUS_FAILED: {
+                    Log.d("MyTag", "Download failed");
+                } case DownloadManager.STATUS_SUCCESSFUL: {
+                    Log.d("MyTag", "Download successful");
+                }
+            }
+            c.close();
+
+        }
+
     }
 
     @Override
@@ -263,10 +370,20 @@ public class MainActivity
             // Update now playing
             seekBar.setMax(playingBook.getDuration());
             String displayText = "Now playing: " + playingBook.getTitle();
-            nowPlayingTextView.setText(displayText);
+            // Sometimes crashes because nowPlayingTextView isn't initialized yet?
+            try{
+                nowPlayingTextView.setText(displayText);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+
         } else {
             // No book
-            nowPlayingTextView.setText("");
+            try{
+                nowPlayingTextView.setText("");
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
@@ -274,6 +391,23 @@ public class MainActivity
     public void setControlReferences(SeekBar seekBar, TextView nowPlayingTextView){
         this.seekBar = seekBar;
         this.nowPlayingTextView = nowPlayingTextView;
+        // TODO might fix visual bugs if use of these references are eliminated.
+    }
+
+    public ArrayList<String> bookListToStringSet(BookList bookList){
+        ArrayList<String> books = new ArrayList<>();
+        Gson gson = new Gson();
+        Book tempBook;
+
+        for(int i = 0; i < bookList.size(); i++){
+            try{
+                tempBook = bookList.get(i);
+                books.add(gson.toJson(tempBook));
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return books;
     }
 
     @Override
@@ -282,10 +416,9 @@ public class MainActivity
         // Saves selected book
         outState.putParcelable(KEY_SELECTED_BOOK, selectedBook);
         outState.putParcelable(KEY_BOOKLIST, bookList);
-        outState.putParcelable(KEY_PROGRESS, seekBar.onSaveInstanceState());
+        outState.putInt(KEY_PROGRESS, seekBar.getProgress());
         outState.putParcelable(KEY_PLAYING_BOOK, playingBook);
     }
-
 
     @Override
     public void onBackPressed() {
