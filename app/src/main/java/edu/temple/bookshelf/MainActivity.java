@@ -58,7 +58,6 @@ public class MainActivity
     BookDetailsFragment bookDetailsFragment;
     BookListFragment bookListFragment;
 
-    // TODO use JSONObject to store book ids, fileNames, and progress
     JSONObject audioBookList;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
@@ -438,7 +437,6 @@ public class MainActivity
     public void setControlReferences(SeekBar seekBar, TextView nowPlayingTextView){
         this.seekBar = seekBar;
         this.nowPlayingTextView = nowPlayingTextView;
-        // TODO might fix visual bugs if use of these references are eliminated.
     }
 
     @Override
