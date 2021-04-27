@@ -57,6 +57,8 @@ public class MainActivity
     BookDetailsFragment bookDetailsFragment;
     BookListFragment bookListFragment;
 
+    // TODO use JSONArray to store book ids, fileNames, and progress
+    JSONArray audioBookList;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
     Handler progressHandler;
@@ -80,6 +82,7 @@ public class MainActivity
     private final String KEY_BOOKLIST = "booksHere";
     private final String KEY_PROGRESS = "progress";
     private final String KEY_PLAYING_BOOK = "playingBook";
+    private final String KEY_AUDIO_BOOKS = "audioBookList";
     public static final int SEARCH_REQUEST_CODE = 12434;
 
     @Override
@@ -91,9 +94,12 @@ public class MainActivity
         preferences = getPreferences(MODE_PRIVATE);
         editor = preferences.edit();
         bookList = gson.fromJson(preferences.getString(KEY_BOOKLIST, null), BookList.class);
+        Log.d("MyTag", (preferences.getString(KEY_BOOKLIST, null)));
         selectedBook = gson.fromJson(preferences.getString(KEY_SELECTED_BOOK, null), Book.class);
         playingBook = gson.fromJson(preferences.getString(KEY_PLAYING_BOOK, null), Book.class);
         seekProgress = preferences.getInt(KEY_PROGRESS, 0);
+
+        Log.d("MyTag", "bookList.size(): " + bookList.size());
 
         // Fetch selected book if there was one
         if(savedInstanceState != null){
@@ -102,7 +108,7 @@ public class MainActivity
             // Fetch previously searched books if one was previously retrieved
             bookList = savedInstanceState.getParcelable(KEY_BOOKLIST);
             seekProgress = savedInstanceState.getInt(KEY_PROGRESS);
-        } else {
+        } else if (bookList == null){
             bookList = new BookList();
         }
 
