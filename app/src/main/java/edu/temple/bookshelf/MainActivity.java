@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
@@ -97,6 +98,7 @@ public class MainActivity
         selectedBook = gson.fromJson(preferences.getString(KEY_SELECTED_BOOK, null), Book.class);
         playingBook = gson.fromJson(preferences.getString(KEY_PLAYING_BOOK, null), Book.class);
         seekProgress = preferences.getInt(KEY_PROGRESS, 0);
+        audioBookList = gson.fromJson(preferences.getString(KEY_AUDIO_BOOKS, null), JSONObject.class);
 
         // Fetch selected book if there was one
         if(savedInstanceState != null){
@@ -149,7 +151,7 @@ public class MainActivity
 
         controlFragment = ControlFragment.newInstance();
         fm.beginTransaction()
-                .add(R.id.control_container, controlFragment, TAG_CONTROL)
+                .replace(R.id.control_container, controlFragment, TAG_CONTROL)
                 .commit();
 
         // controlFragment's onCreateView function hasn't been called yet here
@@ -243,6 +245,7 @@ public class MainActivity
         editor.putString(KEY_PLAYING_BOOK, gson.toJson(playingBook));
         editor.putString(KEY_SELECTED_BOOK, gson.toJson(selectedBook));
         editor.putInt(KEY_PROGRESS, seekBar.getProgress());
+        editor.putString(KEY_AUDIO_BOOKS, gson.toJson(audioBookList));
         editor.apply();
     }
 
@@ -277,7 +280,7 @@ public class MainActivity
         if((fm.findFragmentByTag(TAG_BOOKDETAILS) instanceof BookDetailsFragment)){
             fm.popBackStack();
         }
-        ((BookListFragment) fm.findFragmentByTag(TAG_BOOKLIST)).showNewBooks();
+        ((BookListFragment) Objects.requireNonNull(fm.findFragmentByTag(TAG_BOOKLIST))).showNewBooks();
     }
 
     // ControlFragmentInterface method implementation
@@ -307,6 +310,10 @@ public class MainActivity
             // If fileName is null, then the book hasn't been downloaded.
             // If the book downloads, then set the book's fileName
 
+            // File downloading currently doesn't function
+            // Tried adding android:usesCleartextTraffic="true" in AndroidManifest.xml
+            // but download continues to fail. This implementation only leads to audio stream,
+            // but most of the behavior is implemented.
             String fileName = null;
 
             if(fileName != null){   // Already downloaded, get progress
@@ -336,7 +343,6 @@ public class MainActivity
                     mediaControlBinder.play(playingBook.getId());
                 }
             }
-            // TODO Consider moving startService()
             startService(serviceIntent);
         }
     }
@@ -354,6 +360,7 @@ public class MainActivity
         }
     }
 
+    // TODO fix "downloadfile-1.bin Download unsuccessful" issue
     @Override
     public void downloadBook(String downloadString) {
 
@@ -364,7 +371,7 @@ public class MainActivity
         DownloadManager.Query query = new DownloadManager.Query();
         query.setFilterByStatus(DownloadManager.STATUS_FAILED | DownloadManager.STATUS_SUCCESSFUL);
         DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-        long downloadId = dm.enqueue(req);
+        dm.enqueue(req); // returns a downloadId (long)
 
         Cursor c = dm.query(query);
         int status;
