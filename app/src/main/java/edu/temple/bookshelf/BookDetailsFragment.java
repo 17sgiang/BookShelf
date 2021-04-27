@@ -71,9 +71,6 @@ public class BookDetailsFragment extends Fragment {
 
     }
 
-    // BookDetailsFragment should eventually already have an instance of bookList
-    // This method should instead just change the displayed book depending on position given
-
     // Current implementation just displays a book given
     public void displayBook(Book book){
         titleTextView.setText(book.getTitle());

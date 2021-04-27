@@ -57,8 +57,8 @@ public class MainActivity
     BookDetailsFragment bookDetailsFragment;
     BookListFragment bookListFragment;
 
-    // TODO use JSONArray to store book ids, fileNames, and progress
-    JSONArray audioBookList;
+    // TODO use JSONObject to store book ids, fileNames, and progress
+    JSONObject audioBookList;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
     Handler progressHandler;
@@ -94,12 +94,9 @@ public class MainActivity
         preferences = getPreferences(MODE_PRIVATE);
         editor = preferences.edit();
         bookList = gson.fromJson(preferences.getString(KEY_BOOKLIST, null), BookList.class);
-        Log.d("MyTag", (preferences.getString(KEY_BOOKLIST, null)));
         selectedBook = gson.fromJson(preferences.getString(KEY_SELECTED_BOOK, null), Book.class);
         playingBook = gson.fromJson(preferences.getString(KEY_PLAYING_BOOK, null), Book.class);
         seekProgress = preferences.getInt(KEY_PROGRESS, 0);
-
-        Log.d("MyTag", "bookList.size(): " + bookList.size());
 
         // Fetch selected book if there was one
         if(savedInstanceState != null){
@@ -108,10 +105,13 @@ public class MainActivity
             // Fetch previously searched books if one was previously retrieved
             bookList = savedInstanceState.getParcelable(KEY_BOOKLIST);
             seekProgress = savedInstanceState.getInt(KEY_PROGRESS);
-        } else if (bookList == null){
+        }
+        if(bookList == null){
             bookList = new BookList();
         }
-
+        if(audioBookList == null){
+            audioBookList = new JSONObject();
+        }
         twoPane = findViewById(R.id.container_2) != null;
         fm = getSupportFragmentManager();
 
@@ -246,11 +246,21 @@ public class MainActivity
         editor.apply();
     }
 
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState){
+        super.onSaveInstanceState(outState);
+        // Saves selected book
+        outState.putParcelable(KEY_SELECTED_BOOK, selectedBook);
+        outState.putParcelable(KEY_BOOKLIST, bookList);
+        outState.putInt(KEY_PROGRESS, seekBar.getProgress());
+        outState.putParcelable(KEY_PLAYING_BOOK, playingBook);
+    }
+
     // One of the BookListFragmentInterface methods
     public void bookSelected(int index){
-        // Store the selected book to use later if activity restarts
+        // Store the selected book
         selectedBook = bookList.get(index);
-
+        Log.d("MyTag", "Selected: " + selectedBook.getTitle());
         if(twoPane){
             // Display selected book using previously attached fragment
             bookDetailsFragment.displayBook(selectedBook);
@@ -274,37 +284,55 @@ public class MainActivity
     @Override
     public void bookPlay() {
 
-        if(selectedBook != null){
+        if(playingBook != selectedBook && selectedBook != null){
+            // New book started, save progress
+            try{
+                audioBookList.put(String.valueOf(playingBook.getId()), seekBar.getProgress());
+            } catch(Exception e){
+                e.printStackTrace();
+            }
 
-            playingBook = selectedBook;
+        }
+        playingBook = selectedBook;
+
+        if(playingBook != null){
             updateNowPlaying();
+            int progress = 0;
 
             String downloadString = "https://kamorris.com/lab/audlib/download.php?id=" + playingBook.getId();
             Log.d("MyTag", "downloadString: " + downloadString);
             // greatexpectations_01_dickens_64kb.mp3
-            // TODO figure out how to generate this filename
-            // Rather than generating it, try getting it from the Book object
+
+            // Rather than generating it, try getting it from audioBookList
             // If fileName is null, then the book hasn't been downloaded.
             // If the book downloads, then set the book's fileName
-            // Be careful about which version of the book you edit, might not persist
 
             String fileName = null;
 
-            if(fileName != null){
+            if(fileName != null){   // Already downloaded, get progress
+                try{
+                    progress = (int) audioBookList.get(String.valueOf(playingBook.getId()));
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
 
-                // file's declaration might have to be moved to increase scope
                 File file = new File(getFilesDir(), fileName);
-                // If downloaded, play the book from downloaded source instead of streaming it
+                // play the book from downloaded source instead of streaming it
                 if(isConnected){
                     Log.d("MyTag", "Playing from file");
-                    mediaControlBinder.play(file);
+                    mediaControlBinder.play(file, progress);
                 }
-            } else {
-                // Stream as usual
-                // Also begin downloading the book in the background
-                downloadBook(downloadString);
+            } else {    // Not downloaded, put new entry in audioBookList
 
-                if(isConnected){
+                try{
+                    audioBookList.put(String.valueOf(playingBook.getId()), 0);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                downloadBook(downloadString);   // Download book in the background
+
+                if(isConnected){                // Stream as usual
                     mediaControlBinder.play(playingBook.getId());
                 }
             }
@@ -315,6 +343,12 @@ public class MainActivity
 
     @Override
     public void bookPause() {
+        // Save progress on pause
+        try{
+            audioBookList.put(String.valueOf(playingBook.getId()), seekBar.getProgress());
+        } catch(Exception e){
+            e.printStackTrace();
+        }
         if(isConnected) {
             mediaControlBinder.pause();
         }
@@ -332,9 +366,6 @@ public class MainActivity
         DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         long downloadId = dm.enqueue(req);
 
-
-        // Set the fileName to downloadedBooks (Map<Integer, Book>)
-//        dm.
         Cursor c = dm.query(query);
         int status;
         // Checks and returns status
@@ -349,17 +380,23 @@ public class MainActivity
                 }
             }
             c.close();
-
         }
-
     }
 
     @Override
     public void bookStop() {
+        // Set progress to 0 if stop is pressed.
+        try{
+            audioBookList.put(String.valueOf(playingBook.getId()), 0);
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
         mediaControlBinder.stop();
         // Update now playing
+        playingBook = null;
         seekBar.setProgress(0);
-        nowPlayingTextView.setText("");
+        updateNowPlaying();
     }
 
     @Override
@@ -377,15 +414,12 @@ public class MainActivity
             seekBar.setMax(playingBook.getDuration());
             String displayText = "Now playing: " + playingBook.getTitle();
             // Sometimes crashes because nowPlayingTextView isn't initialized yet?
-            try{
-                nowPlayingTextView.setText(displayText);
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-
+//            controlFragment.updateNowPlaying(displayText);
+            nowPlayingTextView.setText(displayText);
         } else {
             // No book
             try{
+//                controlFragment.updateNowPlaying("");
                 nowPlayingTextView.setText("");
             } catch (Exception e){
                 e.printStackTrace();
@@ -398,32 +432,6 @@ public class MainActivity
         this.seekBar = seekBar;
         this.nowPlayingTextView = nowPlayingTextView;
         // TODO might fix visual bugs if use of these references are eliminated.
-    }
-
-    public ArrayList<String> bookListToStringSet(BookList bookList){
-        ArrayList<String> books = new ArrayList<>();
-        Gson gson = new Gson();
-        Book tempBook;
-
-        for(int i = 0; i < bookList.size(); i++){
-            try{
-                tempBook = bookList.get(i);
-                books.add(gson.toJson(tempBook));
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        return books;
-    }
-
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState){
-        super.onSaveInstanceState(outState);
-        // Saves selected book
-        outState.putParcelable(KEY_SELECTED_BOOK, selectedBook);
-        outState.putParcelable(KEY_BOOKLIST, bookList);
-        outState.putInt(KEY_PROGRESS, seekBar.getProgress());
-        outState.putParcelable(KEY_PLAYING_BOOK, playingBook);
     }
 
     @Override

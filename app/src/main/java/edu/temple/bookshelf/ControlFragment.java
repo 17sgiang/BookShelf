@@ -36,6 +36,8 @@ public class ControlFragment extends Fragment {
         } else {
             throw new RuntimeException("Please implement the BookListFragmentInterface");
         }
+
+
     }
 
 
@@ -88,7 +90,6 @@ public class ControlFragment extends Fragment {
             }
         });
 
-        parentActivity.setControlReferences(v.findViewById(R.id.seek_bar), nowPlayingTextView);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
 
@@ -109,7 +110,14 @@ public class ControlFragment extends Fragment {
             }
         });
 
+        parentActivity.setControlReferences(v.findViewById(R.id.seek_bar), nowPlayingTextView);
+
+        parentActivity.updateNowPlaying();
         return v;
+    }
+
+    public void updateNowPlaying(String displayText){
+        nowPlayingTextView.setText(displayText);
     }
 
     // To call methods in ParentActivity

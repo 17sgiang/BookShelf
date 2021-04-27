@@ -56,6 +56,7 @@ public class BookListFragment extends Fragment {
         } else {
             throw new RuntimeException("Please implement the BookListFragmentInterface");
         }
+
     }
 
     // Prevent memory leaks
