@@ -274,8 +274,15 @@ public class MainActivity
 
         if(playingBook != selectedBook && selectedBook != null){
             // New book started, save progress
+            int progress;
             try{
-                audioBookList.put(String.valueOf(playingBook.getId()), seekBar.getProgress());
+                progress = seekBar.getProgress();
+                if(progress <= 10){
+                    progress = 0;
+                } else {
+                    progress -= 10;
+                }
+                audioBookList.put(String.valueOf(playingBook.getId()), progress);
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -338,8 +345,15 @@ public class MainActivity
     @Override
     public void bookPause() {
         // Save progress on pause
+        int progress;
         try{
-            audioBookList.put(String.valueOf(playingBook.getId()), seekBar.getProgress());
+            progress = seekBar.getProgress();
+            if(progress <= 10){
+                progress = 0;
+            } else {
+                progress -= 10;
+            }
+            audioBookList.put(String.valueOf(playingBook.getId()), progress);
         } catch(Exception e){
             e.printStackTrace();
         }
